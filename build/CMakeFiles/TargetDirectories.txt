@@ -1,0 +1,7 @@
+/home/amorast/DataTable/build/CMakeFiles/install/strip.dir
+/home/amorast/DataTable/build/CMakeFiles/edit_cache.dir
+/home/amorast/DataTable/build/CMakeFiles/DataTable.dir
+/home/amorast/DataTable/build/CMakeFiles/rebuild_cache.dir
+/home/amorast/DataTable/build/CMakeFiles/list_install_components.dir
+/home/amorast/DataTable/build/CMakeFiles/install/local.dir
+/home/amorast/DataTable/build/CMakeFiles/install.dir

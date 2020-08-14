@@ -1,0 +1,7 @@
+/usr/local/lib/libDataTable.so.1.0.0
+/usr/local/lib/libDataTable.so.1
+/usr/local/lib/libDataTable.so
+/usr/local/include/DataTable/Include.hpp
+/usr/local/share/pkgconfig/datatable.pc
+/usr/local/include/DataTable/StringUtils.hpp
+/usr/local/include/DataTable/DataTable.hpp
