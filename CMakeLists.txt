@@ -13,7 +13,8 @@ add_library(DataTable SHARED
 ## create list of includes (public headers)
 ## THese will be included in the programs using our program
 set(PHEADERS 
-	"include/Include.hpp"
+	"include/DataTable/DataTable.hpp"
+	"include/DataTable/StringUtils.hpp"
 )
 
 # some CMAKE config
