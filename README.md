@@ -1,6 +1,6 @@
 # DataTables
 Data tables for C++. The goal for these tables is to encompass all of the functionality of other data frame objects,
-e.g. R and Pandas DataFrames.
+e.g. R and Pandas DataFrames, while remaining computationally and memory efficient.
 
 # Dependencies 
 + CMAKE
