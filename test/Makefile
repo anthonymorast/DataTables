@@ -1,10 +1,9 @@
-CFLAGS=--std=c++11 -Wno-psabi -lDataTable 
+CFLAGS=--std=c++11 -Wno-psabi -lDataTable
 
 all: dt
 
 dt:
-	g++ $(CFLAGS) -o dt DataTableTest.cpp
+	g++ -o dt DataTableTest.cpp $(CFLAGS) 
 
 clean:
-	rm -rf *.o stats linreg nn armadillo_test mr dt
-
+	rm -rf *.o dt

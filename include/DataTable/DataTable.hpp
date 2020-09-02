@@ -11,6 +11,9 @@
 #include <cstring>
 #include <random>
 
+#include <vector>
+#include <iterator>
+
 namespace datatable
 {
     class DataTable
@@ -28,8 +31,8 @@ namespace datatable
             void to_file(std::string filename, char delimiter=',');
 
             // get data
-            double** get_data();					
-            double* get_row(int row);		
+            double** get_data();
+            double* get_row(int row);
             double* get_column(int column);
             double* get_column(std::string column_name);
             double* get_response();

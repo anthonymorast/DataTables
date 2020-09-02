@@ -16,6 +16,10 @@ int main()
 	cout << shape[0] << ", " << shape[1] << endl;
 	dt.print_shape(cout);
 
+    datatable::DataTable dt2 = dt.top_n_rows(10);
+    dt.print(cout);
+    dt2.print(cout);
+
 	double* col = dt.get_column(0);
 
 	dt.to_file("same_but_dots.csv", '*');

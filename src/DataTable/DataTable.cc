@@ -1,6 +1,5 @@
 #include <DataTable/DataTable.hpp>
 
-
 namespace datatable
 {
     // TODO: need to seriously test the DataTable class, there is a lot of stuff going on...
@@ -31,7 +30,7 @@ namespace datatable
 
     /*! DataTable::DataTable(string*, int, double**, int, int, bool)
      *  When the response column number is passed into this constructor, it's assumed the user will use
-     *  0-based notation. This is due to the fact that 0-based indexing is used in other get/print methods.
+     *  0-based indexing. This is due to the fact that 0-based indexing is used in other get/print methods.
      */
     DataTable::DataTable(std::string* headers, int response_column, double** data, int nrows, int ncols, bool has_headers)
     {
@@ -92,9 +91,13 @@ namespace datatable
             return;
         }
 
+        std::vector<std::string> lines;
+        std::copy(std::istream_iterator<std::string>(data_file),
+                  std::istream_iterator<std::string>(),
+                  std::back_inserter(lines));
+
         // read first line, regardless of headers, to get valuable data (ncols)
-        std::string line;
-        std::getline(data_file, line);
+        std::string line = lines.front();
         std::istringstream ss(line);
         std::string value;
         _cols = 0;
@@ -128,26 +131,20 @@ namespace datatable
             }
         }
 
+        if(has_headers)
+            lines.erase(lines.begin());     // skip headers if need be
+
         // process the remainder of the data file; first need to get rowcount to allocate memory
-        _rows = 1;	// first line above
-        while(std::getline(data_file, line))
-        {
-            _rows++;
-        }
+        _rows = lines.size();
         _data = new double*[_rows];
         for(int i = 0; i < _rows; i++)
             _data[i] = new double[_cols];
 
-        data_file.clear();	// clear eof flag
-        data_file.seekg(0, std::ios::beg);	// go to beginning of file
-        if(has_headers)
-            std::getline(data_file, line); // skip headers
-
         int row_count = 0;
-        while(std::getline(data_file, line)) 
+        for(auto it = lines.begin(); it != lines.end(); it++)
         {
             int col_count = 0;
-            std::istringstream ss2(line);
+            std::istringstream ss2((*it));
             while(std::getline(ss2, value, ','))
             {
                 try
@@ -212,19 +209,19 @@ namespace datatable
     }
 
     double** DataTable::get_data() { return _data; }
-    double* DataTable::get_row(int row) 
-    { 
+    double* DataTable::get_row(int row)
+    {
         if(row >= _rows || row < 0)
         {
             std::cout << "ERROR: row index out of range; row " << row << " out of " << (_rows+1) << std::endl;
             std::cout << "NOTE: row indexing is 0-based." << std::endl;
             return 0;
         }
-        return _data[row]; 
+        return _data[row];
     }
 
-    double* DataTable::get_column(int column) 
-    { 	
+    double* DataTable::get_column(int column)
+    {
         if(column >= _cols || column < 0)
         {
             std::cout << "ERROR: column index out of range; column " << column << " out of " << (_cols+1) << std::endl;
@@ -237,7 +234,7 @@ namespace datatable
         {
             col_data[i] = _data[i][column];
         }
-        return col_data; 
+        return col_data;
     }
 
     double* DataTable::get_column(std::string column_name)
@@ -316,38 +313,28 @@ namespace datatable
     DataTable DataTable::select_columns(std::string* variables, int number_cols)
     {
         if(!_has_headers)
-        {   
+        {
             std::cout << "ERROR: attempting to select columns by header values on headerless data table." << std::endl;
             DataTable e;
             return e;
-        }   
-        
+        }
+
         int* column_numbers = new int[number_cols];
         for(int i = 0; i < number_cols; i++)
             column_numbers[i] = get_column_from_header(variables[i]);
 
         return select_columns(column_numbers, number_cols);
     }
-    
+
     DataTable DataTable::select_rows(int* row_numbers, int number_rows)
     {
         double** data = new double*[number_rows];
         for(int i = 0; i < number_rows; i++)
             data[i] = new double[_cols];
 
-        int row_count = -1;
-        for(int i = 0; i < _rows; i++)
+        for(int k = 0; k < number_rows; k++)
         {
-            for(int k = 0; k < number_rows; k++)
-            {
-                if(row_numbers[k] == i)
-                {
-                    row_count++;
-                    for(int j = 0; j < _cols; j++)
-                        data[row_count][j] = _data[i][j];
-                    break;
-                }
-            }
+            memcpy(data[k], _data[row_numbers[k]], _cols * sizeof(double));
         }
 
         DataTable new_dt(_headers, _response, data, number_rows, _cols);
@@ -385,7 +372,7 @@ namespace datatable
     }
 
     void DataTable::print(std::ostream& stream)
-    {	
+    {
         if(!_data_loaded)
         {
             std::cout << "ERROR: printing empty data table." << std::endl;
@@ -404,7 +391,7 @@ namespace datatable
             stream << std::endl;
         }
 
-        for(int i = (_has_headers ? 1 : 0); i < _rows; i++)
+        for(int i = 0; i < _rows; i++)
         {
             for(int j = 0; j < _cols; j++)
             {
@@ -444,7 +431,7 @@ namespace datatable
     }
 
     void DataTable::print_row(std::ostream& stream, int row)
-    {	
+    {
         if(row >= _rows || row < 0)
         {
             std::cout << "ERROR: row index out of range; row " << row << " out of " << (_rows+1) << std::endl;
@@ -459,7 +446,7 @@ namespace datatable
 
     void DataTable::print_headers(std::ostream& stream)
     {
-        for(int i = 0; i < _cols; i++) 
+        for(int i = 0; i < _cols; i++)
             stream << _headers[i] << (i < _cols-1 ? ", " : "");
         stream << std::endl;
     }
@@ -472,7 +459,7 @@ namespace datatable
             std::cout << "NOTE: row indexing is 0-based." << std::endl;
             return 0;
         }
-        return _data[row]; 
+        return _data[row];
     }
 
     std::ostream& operator<<(std::ostream& os, const DataTable& table)
@@ -495,7 +482,7 @@ namespace datatable
             os << std::endl;
         }
 
-        for(int i = (table._has_headers ? 1 : 0); i < table._rows; i++)
+        for(int i = 0; i < table._rows; i++)
         {
             for(int j = 0; j < table._cols; j++)
             {
@@ -516,7 +503,7 @@ namespace datatable
         double** new_data = new double*[_rows];
         for(int i = 0; i < _rows; i++)
             new_data[i] = new double[_cols - count];
-        
+
         int new_col_count = 0;
         for(int i = 0; i < _cols; i++)
         {
@@ -551,7 +538,7 @@ namespace datatable
         }
         std::cout << _cols << std::endl;
         _data = new_data;
-       _cols -= count; 
+       _cols -= count;
         std::cout << _cols << std::endl;
     }
 
@@ -598,7 +585,7 @@ namespace datatable
         _data = new_data;
         _rows -= count;
     }
-    
+
     std::string DataTable::get_header_at(int col)
     {
         if(!_has_headers)
@@ -651,7 +638,7 @@ namespace datatable
         std::random_device rd;
         std::mt19937 g(rd());
         std::uniform_int_distribution<int> distribution(0, _rows-1);
-        
+
         double *temp;
         for(int i = 0; i < passes; i++)
         {
