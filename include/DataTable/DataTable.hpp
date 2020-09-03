@@ -24,6 +24,7 @@ namespace datatable
             DataTable(std::string csv_file_name, std::string response_column="", bool has_headers=true);
             DataTable(std::string* headers, std::string response_name, double** data, int nrows, int ncols, bool has_headers=true);
             DataTable(std::string* headers, int response_column, double** data, int nrows, int ncols, bool has_headers=true);
+            DataTable(const DataTable&); // copy constructor
             ~DataTable();
 
             // file manip
@@ -48,6 +49,7 @@ namespace datatable
             std::string get_header_at(int col);
             std::string* get_headers();
             std::string* get_explanatory_headers();
+            std::string get_response_column_name();
 
             // visualization
             void print(std::ostream& stream);
@@ -60,6 +62,8 @@ namespace datatable
             // table operations
             void drop_columns(int* columns, int count);
             void drop_columns(std::string* column_names, int count);
+            void drop_column(int column);
+            void drop_column(std::string column);
             void drop_rows(int* rows, int count);
             void shuffle_rows(int passes=100);
 

@@ -1,7 +1,8 @@
 #include <DataTable/DataTable.hpp>
 #include <armadillo>
-
 #include <iostream>
+#include <string>
+
 using namespace std;
 using namespace arma;
 
@@ -30,6 +31,13 @@ int main()
 	}
 
     mat m(flat_data, dt.ncols(), dt.nrows());
+
+	datatable::DataTable dt3 = dt;
+	dt3.drop_column("x2");
+	cout << dt3 << endl << dt << endl;
+	dt3.drop_column(0);
+	cout << dt3 << endl;
+	cout << dt3.get_response_column_name() << endl;
 
 	dt.to_file("same_but_dots.csv", '*');
 }

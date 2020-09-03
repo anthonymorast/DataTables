@@ -28,6 +28,27 @@ namespace datatable
         _has_headers = has_headers;
     }
 
+    DataTable::DataTable(const DataTable& old_table)
+    {
+        _cols = old_table._cols;
+        _rows = old_table._rows;
+        _headers = new std::string[_cols];
+        for(int i = 0; i < _cols; i++)
+        {
+            _headers[i] = old_table._headers[i];
+        }
+        _data = new double*[_rows];
+        for(int i = 0; i < _rows; i++)
+        {
+            _data[i] = new double[_cols];
+            memcpy(_data[i], old_table._data[i], _cols * sizeof(double));
+        }
+        _response = old_table._response;
+        _response_column = old_table._response_column;
+        _data_loaded = old_table._data_loaded;
+        _has_headers = old_table._has_headers;
+    }
+
     /*! DataTable::DataTable(string*, int, double**, int, int, bool)
      *  When the response column number is passed into this constructor, it's assumed the user will use
      *  0-based indexing. This is due to the fact that 0-based indexing is used in other get/print methods.
@@ -55,6 +76,15 @@ namespace datatable
     bool DataTable::has_response()
     {
         return std::strcmp(_response.c_str(), "");
+    }
+
+    std::string DataTable::get_response_column_name()
+    {
+        if(has_response())
+        {
+            return _response;
+        }
+        return "";
     }
 
     int DataTable::get_column_from_header(std::string header)
@@ -524,6 +554,15 @@ namespace datatable
         return os;
     }
 
+    void DataTable::drop_column(int column)
+    {
+        drop_columns(new int[1]{column}, 1);
+    }
+
+    void DataTable::drop_column(std::string column)
+    {
+        drop_columns(new std::string[1]{column}, 1);
+    }
 
     void DataTable::drop_columns(int* columns, int count)
     {
@@ -564,10 +603,8 @@ namespace datatable
             // in case this changed
             _response_column = get_column_from_header(_response);
         }
-        std::cout << _cols << std::endl;
         _data = new_data;
        _cols -= count;
-        std::cout << _cols << std::endl;
     }
 
     void DataTable::drop_columns(std::string* column_names, int count)
