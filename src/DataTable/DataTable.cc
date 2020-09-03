@@ -254,6 +254,21 @@ namespace datatable
         return (col < 0 ? 0 : get_column(_response));
     }
 
+    /*
+        Becomes necessary when the response column contains classes (represented by integers)
+        rather than doubles. Libraries like mlpack only accept integers for methods
+        such as logistic regression.
+    */
+    size_t* DataTable::get_int_response()
+    {
+        size_t* data = new size_t[_rows];
+        for(int i = 0; i < _rows; i++)
+        {
+            data[i] = (size_t)_data[i];
+        }
+        return data;
+    }
+
     double** DataTable::get_all_explanatory()
     {
         double** data = new double*[_rows];
@@ -269,6 +284,19 @@ namespace datatable
                     data[i][j] = _data[i][j];
                 else if(j > _response_column)	// use previous index after response column
                     data[i][j-1] = _data[i][j];
+            }
+        }
+        return data;
+    }
+
+    double* DataTable::get_flat_explanatory()
+    {
+        double* data = new double[_rows * _cols];
+        for(int i = 0; i < _rows; i++)
+        {
+            for(int j = 0; j < _cols; j++)
+            {
+                 data[(i*_cols) + j] = _data[i][j];
             }
         }
         return data;

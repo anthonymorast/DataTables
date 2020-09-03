@@ -1,7 +1,9 @@
 #include <DataTable/DataTable.hpp>
+#include <armadillo>
 
 #include <iostream>
 using namespace std;
+using namespace arma;
 
 int main()
 {
@@ -21,6 +23,13 @@ int main()
     dt2.print(cout);
 
 	double* col = dt.get_column(0);
+	double* flat_data = dt.get_flat_explanatory();
+	for(int i = 0; i < dt.ncols()*dt.nrows(); i++)
+	{
+		cout << flat_data[i] << " ";
+	}
+
+    mat m(flat_data, dt.ncols(), dt.nrows());
 
 	dt.to_file("same_but_dots.csv", '*');
 }

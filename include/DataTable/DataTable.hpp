@@ -36,7 +36,9 @@ namespace datatable
             double* get_column(int column);
             double* get_column(std::string column_name);
             double* get_response();
+            size_t* get_int_response();
             double** get_all_explanatory();
+            double* get_flat_explanatory();
             DataTable select_columns(int* column_numbers, int number_columns);
             DataTable select_columns(std::string* variables, int number_cols);
             DataTable select_rows(int* row_numbers, int number_rows);
