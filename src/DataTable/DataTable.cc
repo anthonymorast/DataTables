@@ -23,7 +23,8 @@ namespace datatable
         _data = data;
         _headers = headers;
         _response = response_name;
-        _response_column = get_column_from_header(response_name);
+        if(has_response())
+            _response_column = get_column_from_header(response_name);   // a blank ("") response can be used causing issues 
         _data_loaded = true;
         _has_headers = has_headers;
     }
@@ -98,6 +99,7 @@ namespace datatable
                 break;
             }
         }
+
         if(column == (_cols + 1))
         {
             std::cout << "ERROR: Header '" << header << "' not found." << std::endl;
@@ -122,12 +124,19 @@ namespace datatable
         }
 
         std::vector<std::string> lines;
+        std::string line;
+        while(std::getline(data_file, line)) 
+            lines.push_back(line);
+
+        /* TREATS blank spaces as newlines
+
         std::copy(std::istream_iterator<std::string>(data_file),
                   std::istream_iterator<std::string>(),
-                  std::back_inserter(lines));
+                  std::back_inserter(lines)); 
+        */
 
         // read first line, regardless of headers, to get valuable data (ncols)
-        std::string line = lines.front();
+        line = lines.front();
         std::istringstream ss(line);
         std::string value;
         _cols = 0;
@@ -162,7 +171,9 @@ namespace datatable
         }
 
         if(has_headers)
+        {
             lines.erase(lines.begin());     // skip headers if need be
+        }
 
         // process the remainder of the data file; first need to get rowcount to allocate memory
         _rows = lines.size();
@@ -334,33 +345,23 @@ namespace datatable
 
     DataTable DataTable::select_columns(int* column_numbers, int number_columns)
     {
+        std::string* headers = new std::string[number_columns];
         double** data = new double*[_rows];
         for(int i = 0; i < _rows; i++)
             data[i] = new double[number_columns];
 
         int col_count = -1;
         bool keep_response = false;
-        std::string* headers = new std::string[number_columns];
-        for(int j = 0; j < _cols; j++)      // swap loops to minimize number of k loops.
+        for(int k = 0; k < number_columns; k++) 
         {
-            bool use_col = false;
-            for(int k = 0; k < _cols; k++)
+            int col = column_numbers[k];
+            if(col == _response_column)
+                keep_response = true;
+           
+            headers[k] = _headers[col];
+            for(int i = 0; i < _rows; i++)
             {
-                if(j == column_numbers[k])
-                {
-                    use_col = true;
-                    if(j == _response_column)
-                        keep_response = true;
-                    col_count++;
-                    break;
-                }
-            }
-
-            if(use_col)
-            {
-                for(int i = 0; i < _rows; i++)
-                    data[i][col_count] = _data[i][j];
-                headers[col_count] = _headers[j];
+                data[i][k] = _data[i][col];
             }
         }
 
@@ -379,7 +380,9 @@ namespace datatable
 
         int* column_numbers = new int[number_cols];
         for(int i = 0; i < number_cols; i++)
+        {
             column_numbers[i] = get_column_from_header(variables[i]);
+        }
 
         return select_columns(column_numbers, number_cols);
     }

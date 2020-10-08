@@ -10,7 +10,12 @@ int main()
 {
 	datatable::DataTable dt("x_to_x_squared.csv", "x2", true);
 	cout << dt << endl;
-	dt.print_headers(cout);
+
+    dt = dt.select_columns(new string[1]{"x2"}, 1);
+    cout << dt << endl;
+
+
+/*	dt.print_headers(cout);
 	dt.print_column(cout, 0);
 	dt.print_row(cout, 10);
 
@@ -39,5 +44,5 @@ int main()
 	cout << dt3 << endl;
 	cout << dt3.get_response_column_name() << endl;
 
-	dt.to_file("same_but_dots.csv", '*');
+	dt.to_file("same_but_dots.csv", '*');*/
 }
