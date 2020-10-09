@@ -6,6 +6,8 @@ e.g. R and Pandas DataFrames, while remaining computationally and memory efficie
 + CMAKE
 
 # Installation
+After downloading/cloning the source and navigating to the root folder of the source code, the project can be installed via CMake as is done below.
+
 ```
 mkdir build
 cd build
