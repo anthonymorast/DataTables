@@ -1,4 +1,4 @@
-CFLAGS=--std=c++11 -Wno-psabi -lDataTable -larmadillo
+CFLAGS=--std=c++11 -Wno-psabi -lDataTable -larmadillo -lcurl
 
 all: dt
 

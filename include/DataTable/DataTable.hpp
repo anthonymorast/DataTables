@@ -10,6 +10,8 @@
 #include <iostream>
 #include <cstring>
 #include <random>
+#include <ctime>
+#include <regex>
 
 #include <vector>
 #include <iterator>
@@ -67,6 +69,18 @@ namespace datatable
             void drop_rows(int* rows, int count);
             void shuffle_rows(int passes=100);
 
+            // data alteration 
+            double* pct_change(std::string column);
+            double* pct_change(int column);
+            double* sma(std::string column, int periods);
+            double* sma(int column, int periods);
+            double* ema(std::string column, int periods);
+            double* ema(int column, int periods);
+
+            // financial operations
+            double* rsi(std::string column, int periods=14);
+            double* rsi(int column, int periods=14);
+
             // overridden operators
             double* operator[](int index) const;
             friend std::ostream& operator<<(std::ostream& os, const DataTable &table);
@@ -86,7 +100,10 @@ namespace datatable
             int _response_column = 0;
             bool _data_loaded = false;
             bool _has_headers = false;
+            std::vector<int> _datetime_columns;
             StringUtils _str_utils;
+
+            std::vector<std::string> _date_formats; // for future use to support more date formats
 
             int get_column_from_header(std::string header);
     };

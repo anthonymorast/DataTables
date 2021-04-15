@@ -188,14 +188,29 @@ namespace datatable
             std::istringstream ss2((*it));
             while(std::getline(ss2, value, ','))
             {
-                try
+                // check for datetime and covert to timestamp
+                std::regex yyyymmdd_regex("^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$");
+                if(std::regex_match(value, yyyymmdd_regex))
                 {
-                    _data[row_count][col_count] = std::stod(value);
+                    struct std::tm tm;
+                    strptime(value.c_str(), "%Y-%m-%d", &tm);
+                    std::time_t timestamp = std::mktime(&tm);
+
+                    _data[row_count][col_count] = (double)timestamp;
+                    if(std::find(_datetime_columns.begin(), _datetime_columns.end(), col_count) == _datetime_columns.end())
+                        _datetime_columns.push_back(col_count);
                 }
-                catch(std::exception &e)
+                else
                 {
-                    std::cout << "ERROR: value '" << value << "' is not parsable as a double." << std::endl;
-                    return;
+                    try
+                    {
+                        _data[row_count][col_count] = std::stod(value);
+                    }
+                    catch(std::exception &e)
+                    {
+                        std::cout << "ERROR: value '" << value << "' is not parsable as a double." << std::endl;
+                        return;
+                    }
                 }
                 col_count++;
             }
@@ -456,7 +471,17 @@ namespace datatable
         {
             for(int j = 0; j < _cols; j++)
             {
-                stream << _data[i][j];
+                if(std::find(_datetime_columns.begin(), _datetime_columns.end(), j) != _datetime_columns.end()) 
+                {
+                    std::time_t timestamp = (time_t)_data[i][j];
+                    std::tm* ptm = std::localtime(&timestamp);
+                    char buffer[32];
+                    std::strftime(buffer, 32, "%Y-%m-%d", ptm);
+                    stream << buffer;
+                }
+                else 
+                    stream << _data[i][j];
+
                 if(j < _cols-1)
                     stream << delimiter;
             }
@@ -479,8 +504,20 @@ namespace datatable
             return;
         }
 
+
         for(int i = 0; i < _rows; i++)
-            stream << _data[i][column] << std::endl;
+        {
+            if(std::find(_datetime_columns.begin(), _datetime_columns.end(), column) != _datetime_columns.end())
+            {
+                std::time_t timestamp = (time_t)_data[i][column];
+                std::tm* ptm = std::localtime(&timestamp);
+                char buffer[32];
+                std::strftime(buffer, 32, "%Y-%m-%d", ptm);
+                stream << buffer << std::endl;
+            }
+            else
+                stream << _data[i][column] << std::endl;
+        }
     }
 
     void DataTable::print_column(std::ostream& stream, std::string column)
@@ -501,7 +538,18 @@ namespace datatable
         }
 
         for(int i = 0; i < _cols; i++)
-            stream << _data[row][i] << ", ";
+        {
+            if(std::find(_datetime_columns.begin(), _datetime_columns.end(), i) != _datetime_columns.end())
+            {
+                std::time_t timestamp = (time_t)_data[row][i];
+                std::tm* ptm = std::localtime(&timestamp);
+                char buffer[32];
+                std::strftime(buffer, 32, "%Y-%m-%d", ptm);
+                stream << buffer << ", ";
+            }
+            else 
+                stream << _data[row][i] << ", ";
+        }
         stream << std::endl;
     }
 
@@ -547,7 +595,17 @@ namespace datatable
         {
             for(int j = 0; j < table._cols; j++)
             {
-                os << table._data[i][j];
+                if(std::find(table._datetime_columns.begin(), table._datetime_columns.end(), j) != table._datetime_columns.end()) 
+                {
+                    std::time_t timestamp = (time_t)table._data[i][j];
+                    std::tm* ptm = std::localtime(&timestamp);
+                    char buffer[32];
+                    std::strftime(buffer, 32, "%Y-%m-%d", ptm);
+                    os << buffer;
+                }
+                else 
+                    os << table._data[i][j];
+
                 if(j < table._cols-1)
                     os << delimiter;
             }
@@ -721,5 +779,95 @@ namespace datatable
             }
         }
 
+    }
+
+    double* DataTable::pct_change(std::string column)
+    {
+        return pct_change(get_column_from_header(column));
+    }
+
+    double* DataTable::pct_change(int column)
+    {
+        double* changes = new double[_rows-1];
+        for(int i = 1; i < _rows; i++)
+        {
+            changes[i-1] = (_data[i][column] - _data[i-1][column])/_data[i-1][column];
+        }
+
+        return changes;
+    }
+
+    double* DataTable::sma(std::string column, int periods)
+    {
+        return sma(get_column_from_header(column), periods);
+    }
+
+    double* DataTable::sma(int column, int periods)
+    {
+        double* sma = new double[_rows-periods+1];
+        for(int i = periods; i <= _rows; i++)
+        {
+            double sum = 0;
+            for(int j = periods; j > 0; j--)
+                sum += _data[i-j][column];
+            sma[i-periods] = (sum/periods);
+        }
+
+        return sma;
+    }
+
+    double* DataTable::ema(std::string column, int periods)
+    {
+        return ema(get_column_from_header(column), periods);
+    }
+
+    double* DataTable::ema(int column, int periods)
+    {
+        double* ema = new double[_rows - periods + 1];
+        double smoothing = 2.0/(double)(periods + 1);
+        ema[0] = sma(column, periods)[0];
+
+        for(int i = 1; i <= (_rows - periods); i++)
+            ema[i] = (_data[i + periods - 1][column] * smoothing) + (ema[i-1] * (1-smoothing));
+
+        return ema;
+    }
+
+    double* DataTable::rsi(std::string column, int periods)
+    {
+        return rsi(get_column_from_header(column), periods);
+    }
+
+    double* DataTable::rsi(int column, int periods)
+    {
+        double* rsi = new double[_rows - periods];
+        double* changes = pct_change(column);
+        double avg_up = 0;
+        double avg_down = 0;
+
+        for(int i = 0; i < periods; i++) 
+        {
+            if(changes[i] > 0)
+                avg_up += changes[i];
+            else 
+                avg_down += changes[i];
+        }
+        // consider these the SMAs to start an EMA calculation
+        avg_up /= periods;
+        avg_down /= periods;
+        rsi[0] = 100.0 - (100.0 / (1.0 + (avg_up/avg_down)));
+        
+        // use EMA to keep running average of ups and downs
+        double smoothing = 2.0/((double)(periods + 1));
+        for(int i = 1; i < (_rows-periods); i++) 
+        {
+            if(changes[i+periods-1] > 0)
+                avg_up = (changes[i + periods - 1] * smoothing) + (avg_up * (1 - smoothing));
+            else
+                avg_down = (changes[i + periods - 1] * smoothing) + (avg_down * (1 - smoothing));
+            rsi[i] = 100.0 - (100.0 / (1.0 + ((avg_up/avg_down))));
+        }
+
+        return rsi;
     }
 }
