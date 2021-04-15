@@ -2,6 +2,7 @@
 #define DATA_TABLE_DATA_TAB
 
 #include <DataTable/StringUtils.hpp>
+#include <DataTable/DateUtils.hpp>
 
 #include <string>
 #include <fstream>
@@ -10,11 +11,10 @@
 #include <iostream>
 #include <cstring>
 #include <random>
-#include <ctime>
-#include <regex>
 
 #include <vector>
 #include <iterator>
+#include <map>
 
 namespace datatable
 {
@@ -102,8 +102,9 @@ namespace datatable
             bool _has_headers = false;
             std::vector<int> _datetime_columns;
             StringUtils _str_utils;
-
-            std::vector<std::string> _date_formats; // for future use to support more date formats
+            DateUtils _date_utils;
+            // date formats for the datetime columns
+            std::map<int, std::string> _date_columns_to_formats;
 
             int get_column_from_header(std::string header);
     };

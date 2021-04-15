@@ -12,6 +12,7 @@ include(GNUInstallDirs)
 add_library(DataTable SHARED
 	src/DataTable/DataTable.cc
 	src/DataTable/StringUtils.cc
+	src/DataTable/DateUtils.cc
 )
 
 ## create list of includes (public headers)
@@ -19,6 +20,7 @@ add_library(DataTable SHARED
 set(PHEADERS 
 	"include/DataTable/DataTable.hpp"
 	"include/DataTable/StringUtils.hpp"
+	"include/DataTable/DateUtils.hpp"
 )
 
 # some CMAKE config

@@ -188,17 +188,12 @@ namespace datatable
             std::istringstream ss2((*it));
             while(std::getline(ss2, value, ','))
             {
-                // check for datetime and covert to timestamp
-                std::regex yyyymmdd_regex("^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$");
-                if(std::regex_match(value, yyyymmdd_regex))
+                if(_date_utils.isDateTime(value))
                 {
-                    struct std::tm tm;
-                    strptime(value.c_str(), "%Y-%m-%d", &tm);
-                    std::time_t timestamp = std::mktime(&tm);
-
-                    _data[row_count][col_count] = (double)timestamp;
-                    if(std::find(_datetime_columns.begin(), _datetime_columns.end(), col_count) == _datetime_columns.end())
-                        _datetime_columns.push_back(col_count);
+                    std::string format = _date_utils.getFormat(value);
+                    _data[row_count][col_count] = (double)_date_utils.getTimeFromString(value, format);
+                    if(_date_columns_to_formats.find(col_count) == _date_columns_to_formats.end())
+                        _date_columns_to_formats.insert(std::pair<int, std::string>(col_count, format));
                 }
                 else
                 {
@@ -471,14 +466,8 @@ namespace datatable
         {
             for(int j = 0; j < _cols; j++)
             {
-                if(std::find(_datetime_columns.begin(), _datetime_columns.end(), j) != _datetime_columns.end()) 
-                {
-                    std::time_t timestamp = (time_t)_data[i][j];
-                    std::tm* ptm = std::localtime(&timestamp);
-                    char buffer[32];
-                    std::strftime(buffer, 32, "%Y-%m-%d", ptm);
-                    stream << buffer;
-                }
+                if(_date_columns_to_formats.find(j) != _date_columns_to_formats.end())
+                    stream << _date_utils.getStringFromTime((time_t)_data[i][j], _date_columns_to_formats[j]);
                 else 
                     stream << _data[i][j];
 
@@ -507,14 +496,8 @@ namespace datatable
 
         for(int i = 0; i < _rows; i++)
         {
-            if(std::find(_datetime_columns.begin(), _datetime_columns.end(), column) != _datetime_columns.end())
-            {
-                std::time_t timestamp = (time_t)_data[i][column];
-                std::tm* ptm = std::localtime(&timestamp);
-                char buffer[32];
-                std::strftime(buffer, 32, "%Y-%m-%d", ptm);
-                stream << buffer << std::endl;
-            }
+            if(_date_columns_to_formats.find(column) != _date_columns_to_formats.end())
+                stream << _date_utils.getStringFromTime((time_t)_data[i][column], _date_columns_to_formats[column]) << std::endl;
             else
                 stream << _data[i][column] << std::endl;
         }
@@ -539,14 +522,8 @@ namespace datatable
 
         for(int i = 0; i < _cols; i++)
         {
-            if(std::find(_datetime_columns.begin(), _datetime_columns.end(), i) != _datetime_columns.end())
-            {
-                std::time_t timestamp = (time_t)_data[row][i];
-                std::tm* ptm = std::localtime(&timestamp);
-                char buffer[32];
-                std::strftime(buffer, 32, "%Y-%m-%d", ptm);
-                stream << buffer << ", ";
-            }
+            if(_date_columns_to_formats.find(i) != _date_columns_to_formats.end())
+                    stream << _date_utils.getStringFromTime((time_t)_data[row][i], _date_columns_to_formats[i]) << ", ";
             else 
                 stream << _data[row][i] << ", ";
         }
@@ -595,14 +572,8 @@ namespace datatable
         {
             for(int j = 0; j < table._cols; j++)
             {
-                if(std::find(table._datetime_columns.begin(), table._datetime_columns.end(), j) != table._datetime_columns.end()) 
-                {
-                    std::time_t timestamp = (time_t)table._data[i][j];
-                    std::tm* ptm = std::localtime(&timestamp);
-                    char buffer[32];
-                    std::strftime(buffer, 32, "%Y-%m-%d", ptm);
-                    os << buffer;
-                }
+                if(table._date_columns_to_formats.find(j) != table._date_columns_to_formats.end())
+                    os << table._date_utils.getStringFromTime((time_t)table._data[i][j], table._date_columns_to_formats.at(j));
                 else 
                     os << table._data[i][j];
 
@@ -627,6 +598,7 @@ namespace datatable
 
     void DataTable::drop_columns(int* columns, int count)
     {
+        std::map<int, std::string> new_date_columns_to_formats;
         std::string* new_headers = new std::string[_cols-count];
         double** new_data = new double*[_rows];
         for(int i = 0; i < _rows; i++)
@@ -635,6 +607,7 @@ namespace datatable
         int new_col_count = 0;
         for(int i = 0; i < _cols; i++)
         {
+            auto it = _date_columns_to_formats.find(i);
             bool found = false;
             for(int k = 0; k < count; k++)
             {
@@ -653,6 +626,10 @@ namespace datatable
                 }
                 if(_has_headers)
                     new_headers[new_col_count] = _headers[i];
+                
+                if(it != _date_columns_to_formats.end())
+                    new_date_columns_to_formats.insert(std::pair<int, std::string>(new_col_count, it->second));
+
                 new_col_count++;
             }
         }
@@ -666,6 +643,7 @@ namespace datatable
         }
         _data = new_data;
        _cols -= count;
+       _date_columns_to_formats = new_date_columns_to_formats;
     }
 
     void DataTable::drop_columns(std::string* column_names, int count)
@@ -840,6 +818,7 @@ namespace datatable
 
     double* DataTable::rsi(int column, int periods)
     {
+        // TODO: not working
         double* rsi = new double[_rows - periods];
         double* changes = pct_change(column);
         double avg_up = 0;
