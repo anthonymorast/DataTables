@@ -32,7 +32,7 @@ Once installed, the DataTable stucture can be imported via
 The DataTable object lives in the *datatable* namespace so a DataTable can be created via 
 
 ```c 
-datatable::DataTable dt(<params>);
+datatable::DataTable<type> dt(<params>);
 ```
 
 or 
@@ -40,17 +40,17 @@ or
 ```c
 using namespace datatable;
 ...
-DataTable dt(<params>);
+DataTable<type> dt(<params>);
 ```
 
 # Constructors
 There are a few different constructors available for DataTables. The function declarations are shown below (the parameter names are somewhat straightforward).
 
 ```c++
-DataTable();
-DataTable(std::string csv_file_name, std::string response_column="", bool has_headers=true);
-DataTable(std::string* headers, std::string response_name, double** data, int nrows, int ncols, bool has_headers=true);
-DataTable(std::string* headers, int response_column, double** data, int nrows, int ncols, bool has_headers=true);
+DataTable<type>();
+DataTable<type>(std::string csv_file_name, std::string response_column="", bool has_headers=true);
+DataTable<type>(std::string* headers, std::string response_name, double** data, int nrows, int ncols, bool has_headers=true);
+DataTable<type>(std::string* headers, int response_column, double** data, int nrows, int ncols, bool has_headers=true);
 ```
 
 Depending on how the DataTable is created some functionality may not be available. For example, if no response column name was specified it's not possible to get the response or explanatory columns since they will not be defined.
@@ -58,29 +58,52 @@ Depending on how the DataTable is created some functionality may not be availabl
 # Functionality
 Below are the function declarations for the functionality that is currently implemented. In future releases I plan to use some documentation generating software, e.g. doxygen, to generate better documentation. For the time being the function names and parameters are pretty self-explanatory.
 
+Note that TType is the template type of the class. For example, if you wanted a data table that stores integers the instantiation could look like this:
+
 ```c++
-// load and dump data
+datatable::DataTable<int> dt;
+```
+
+If you're table needs to store floats the instantiation with the blank constructor could be:
+
+```c++
+datatable::DataTable<float> dt;
+```
+
+and so on for any data type. **NOTE** that the DataTable class has only been tested with numeric data types.
+
+```c++
+// constructors/destructors
+DataTable();
+DataTable(std::string csv_file_name, std::string response_column="", bool has_headers=true);
+DataTable(std::string* headers, std::string response_name, TType** data, int nrows, int ncols, bool has_headers=true);
+DataTable(std::string* headers, int response_column, TType** data, int nrows, int ncols, bool has_headers=true);
+DataTable(const DataTable<TType>&); // copy constructor
+~DataTable();
+
+// file manip
 void from_csv(std::string filename, std::string response, bool has_headers=true);
 void to_file(std::string filename, char delimiter=',');
 
 // get data
-double** get_data();					
-double* get_row(int row);		
-double* get_column(int column);
-double* get_column(std::string column_name);
-double* get_response();
-double** get_all_explanatory();
-// START GET SPECIFIC ROWS AND COLUMNS
-DataTable select_columns(int* column_numbers, int number_columns);
-DataTable select_columns(std::string* variables, int number_cols);
-DataTable select_rows(int* row_numbers, int number_rows);
-DataTable top_n_rows(int n);
-DataTable bottom_n_rows(int n);
-DataTable select_row_range(int start, int end);
-// END GET SPECIFIC ROWS AND COLUMNS
+TType** get_data();
+TType* get_row(int row);
+TType* get_column(int column);
+TType* get_column(std::string column_name);
+TType* get_response();
+size_t* get_int_response();
+TType** get_all_explanatory();
+TType* get_flat_explanatory();
+DataTable<TType> select_columns(int* column_numbers, int number_columns);
+DataTable<TType> select_columns(std::string* variables, int number_cols);
+DataTable<TType> select_rows(int* row_numbers, int number_rows);
+DataTable<TType> top_n_rows(int n);
+DataTable<TType> bottom_n_rows(int n);
+DataTable<TType> select_row_range(int start, int end);
 std::string get_header_at(int col);
 std::string* get_headers();
 std::string* get_explanatory_headers();
+std::string get_response_column_name();
 
 // visualization
 void print(std::ostream& stream);
@@ -88,22 +111,37 @@ void print_column(std::ostream& stream, int column);
 void print_column(std::ostream& stream, std::string column_name);
 void print_row(std::ostream& stream, int row);
 void print_headers(std::ostream& stream);
-void print_shape(std::ostream& stream);   
+void print_shape(std::ostream& stream);
 
 // table operations
-void drop_columns(int* columns, int count);   // removes columnes from the data set by index 
-void drop_columns(std::string* column_names, int count);  // removes columns from the data set by name
-void drop_rows(int* rows, int count); // removes rows from the data set
-void shuffle_rows(int passes=100);    // shuffles the data set
+void drop_columns(int* columns, int count);
+void drop_columns(std::string* column_names, int count);
+void drop_column(int column);
+void drop_column(std::string column);
+void drop_rows(int* rows, int count);
+void shuffle_rows(int passes=100);
+
+// data alteration 
+TType* pct_change(std::string column);
+TType* pct_change(int column);
+TType* sma(std::string column, int periods);
+TType* sma(int column, int periods);
+TType* ema(std::string column, int periods);
+TType* ema(int column, int periods);
+
+// financial operations
+TType* rsi(std::string column, int periods=14);
+TType* rsi(int column, int periods=14);
 
 // overridden operators
-double* operator[](int index) const;  // get row of DataTable via dt[row_number]
-friend std::ostream& operator<<(std::ostream& os, const DataTable &table);  // prints some information about the data table
+TType* operator[](int index) const;
+template <typename U>
+friend std::ostream& operator<<(std::ostream& os, const DataTable<U> &table);
 
-// etc.
-bool has_response();            // true if response has been specified and is available in data set
-int nrows() { return _rows; }   // return number of rows
-int ncols() { return _cols; }   // return number of columns 
-int* shape() { return new int[2] { _rows, _cols }; }    // numpy.shape
-int response_column_number() { return _response_column; } // column number for response column
+// for other classes
+bool has_response();
+int nrows() { return _rows; }
+int ncols() { return _cols; }
+int* shape() { return new int[2] { _rows, _cols }; }
+int response_column_number() { return _response_column; }
 ```
