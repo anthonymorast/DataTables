@@ -34,8 +34,8 @@ int main()
 	// for(int i = 0; i < dt.nrows()-2; i++)
 	// 	cout << i << ": " << ema3[i] << endl;
 
-    yfapi::YahooFinanceAPI api; 
-    datatable::DataTable dt = api.get_ticker_data("spy", "2021-03-01", "2021-04-14");
+    yfapi::YahooFinanceAPI<double> api; 
+    datatable::DataTable<double> dt = api.get_ticker_data("spy", "2021-03-01", "2021-04-14");
 	cout << dt.nrows() << endl;
 	cout << dt << endl;
 	dt.print_row(cout, 10);
@@ -47,34 +47,32 @@ int main()
 	// for(int i = 0; i < dt.nrows()-14; i++)
 	// 	cout << i << ": " << rsi14[i] << endl;
 
-	// dt.print_headers(cout);
-	// dt.print_column(cout, 0);
-	// dt.print_row(cout, 10);
+	dt.print_headers(cout);
+	dt.print_column(cout, 0);
+	dt.print_row(cout, 10);
 
-	// cout << dt.nrows() << ", " << dt.ncols() << endl;
-	// int* shape = dt.shape();
-	// cout << shape[0] << ", " << shape[1] << endl;
-	// dt.print_shape(cout);
+	cout << dt.nrows() << ", " << dt.ncols() << endl;
+	int* shape = dt.shape();
+	cout << shape[0] << ", " << shape[1] << endl;
+	dt.print_shape(cout);
 
-    // datatable::DataTable dt2 = dt.top_n_rows(10);
-    // dt.print(cout);
-    // dt2.print(cout);
+    datatable::DataTable<double> dt2 = dt.top_n_rows(10);
+    dt.print(cout);
+    dt2.print(cout);
 
-	// double* col = dt.get_column(0);
-	// double* flat_data = dt.get_flat_explanatory();
-	// for(int i = 0; i < dt.ncols()*dt.nrows(); i++)
-	// {
-	// 	cout << flat_data[i] << " ";
-	// }
+	double* col = dt.get_column(0);
+	double* flat_data = dt.get_flat_explanatory();
+	for(int i = 0; i < dt.ncols()*dt.nrows(); i++)
+	{
+		cout << flat_data[i] << " ";
+	}
 
-    // mat m(flat_data, dt.ncols(), dt.nrows());
+	datatable::DataTable<double> dt3 = dt;
+	dt3.drop_column("Date");
+	cout << dt3 << endl << dt << endl;
+	dt3.drop_column(0);
+	cout << dt3 << endl;
+	cout << dt3.get_response_column_name() << endl;
 
-	// datatable::DataTable dt3 = dt;
-	// dt3.drop_column("x2");
-	// cout << dt3 << endl << dt << endl;
-	// dt3.drop_column(0);
-	// cout << dt3 << endl;
-	// cout << dt3.get_response_column_name() << endl;
-
-	// dt.to_file("same_but_dots.csv", '*');
+	dt.to_file("same_but_dots.csv", '*');
 }

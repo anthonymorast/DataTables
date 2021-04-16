@@ -13,13 +13,14 @@
 
 namespace yfapi
 {
+    template <typename T>
     class YahooFinanceAPI
     {
         public:
             YahooFinanceAPI();
             void set_interval(Interval interval);
             void set_col_name(std::string col_name);
-            datatable::DataTable get_ticker_data(std::string ticker, std::string start_date, std::string end_date, bool keep_file=false);
+            datatable::DataTable<T> get_ticker_data(std::string ticker, std::string start_date, std::string end_date, bool keep_file=false);
             std::string download_ticker_data(std::string ticker, std::string start_date, std::string end_date);
 
         private:
@@ -33,7 +34,8 @@ namespace yfapi
             void download_file(std::string url, std::string filename);
     };
 
-    YahooFinanceAPI::YahooFinanceAPI()
+    template <typename T>
+    YahooFinanceAPI<T>::YahooFinanceAPI()
     {
         this->_base_url =
             "https://query1.finance.yahoo.com/v7/finance/download/{ticker}?period1={start_time}&period2={end_time}&interval={interval}&events=history";
@@ -41,7 +43,8 @@ namespace yfapi
         this->_col_name = "Open";
     }
 
-    std::string YahooFinanceAPI::timestamp_from_string(std::string date)
+    template <typename T>
+    std::string YahooFinanceAPI<T>::timestamp_from_string(std::string date)
     {
         struct std::tm time = {0,0,0,0,0,0,0,0,0};
         std::istringstream ss(date);
@@ -58,8 +61,9 @@ namespace yfapi
 
         return std::to_string(epoch);
     }
-
-    bool YahooFinanceAPI::string_replace(std::string& str, const std::string from, const std::string to)
+    
+    template <typename T>
+    bool YahooFinanceAPI<T>::string_replace(std::string& str, const std::string from, const std::string to)
     {
         size_t start = str.find(from);
         if(start == std::string::npos)
@@ -69,8 +73,9 @@ namespace yfapi
         str.replace(start, from.length(), to);
         return true;
     }
-
-    std::string YahooFinanceAPI::build_url(std::string ticker, std::string start, std::string end)
+    
+    template <typename T>
+    std::string YahooFinanceAPI<T>::build_url(std::string ticker, std::string start, std::string end)
     {
         std::string url = this->_base_url;
         string_replace(url, "{ticker}", ticker);
@@ -80,18 +85,22 @@ namespace yfapi
         return url;
     }
 
-
-    void YahooFinanceAPI::set_interval(Interval interval)
+    template <typename T>
+    void YahooFinanceAPI<T>::set_interval(Interval interval)
     {
         this->_interval = interval;
     }
 
-    void YahooFinanceAPI::set_col_name(std::string name)
+    
+    template <typename T>
+    void YahooFinanceAPI<T>::set_col_name(std::string name)
     {
         this->_col_name = name;
     }
 
-    void YahooFinanceAPI::download_file(std::string url, std::string filename)
+    
+    template <typename T>
+    void YahooFinanceAPI<T>::download_file(std::string url, std::string filename)
     {
         CURL *curl;
         FILE *fp;
@@ -116,17 +125,19 @@ namespace yfapi
      * By default this method will delete the tmp file created by the
      * download.
      */
-    datatable::DataTable YahooFinanceAPI::get_ticker_data(std::string ticker, std::string start, std::string end, bool keep_file)
+        
+    template <typename T>
+    datatable::DataTable<T> YahooFinanceAPI<T>::get_ticker_data(std::string ticker, std::string start, std::string end, bool keep_file)
     {
         std::string url = build_url(ticker, start, end);
-        datatable::DataTable dt;
+        datatable::DataTable<T> dt;
         std::time_t now = std::time(0); // now
         std::string output_file_name = ticker + "_" + std::to_string(now) + ".csv";
         if(!keep_file)
             output_file_name = "tmp_" + output_file_name;
 
         download_file(url, output_file_name);
-        dt = datatable::DataTable(output_file_name, this->_col_name, true);
+        dt = datatable::DataTable<T>(output_file_name, this->_col_name, true);
 
         if(!keep_file)
             std::remove(output_file_name.c_str());
@@ -136,8 +147,9 @@ namespace yfapi
     /*
      * Downloads the historical stock data and returns the name of the file
      * created by the download.
-     */
-    std::string YahooFinanceAPI::download_ticker_data(std::string ticker, std::string start, std::string end)
+     */    
+    template <typename T>
+    std::string YahooFinanceAPI<T>::download_ticker_data(std::string ticker, std::string start, std::string end)
     {
         std::string url = build_url(ticker, start, end);
         std::time_t now = std::time(0);
