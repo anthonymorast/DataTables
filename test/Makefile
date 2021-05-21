@@ -1,9 +1,18 @@
-CFLAGS=--std=c++11 -Wno-psabi -lDataTable -larmadillo -lcurl
+CFLAGS=--std=c++11 -Wno-psabi -lDataTable -larmadillo -lcurl 
 
-all: dt
+Test: all 
+    # build here and run via cmake 
+	# ./FileReadTest
+	# ./DataSelectionTest
 
-dt:
-	g++ -o dt DataTableTest.cpp $(CFLAGS) 
+
+all: FileReadTest DataSelectionTest
+
+FileReadTest: FileReadTest.o
+	g++ $(CFLAGS) -o FileReadTest $< 
+
+DataSelectionTest: DataSelectionTest.o
+	g++ $(CFLAGS) -o DataSelectionTest $<
 
 clean:
-	rm -rf *.o dt
+	rm -rf *.o
