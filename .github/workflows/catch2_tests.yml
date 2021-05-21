@@ -4,17 +4,26 @@ on:
   push:
     branches: [ master ]
 
-jobs:
-  build:
+# jobs:
+#   build:
 
-    runs-on: ubuntu-latest
-    env: 
-      working-directory: ./test
-      
-    steps:
-    - uses: actions/checkout@v2
-    - name: dir check
-      run: ls -lrt
-    - name: make
-      run: make
-      working-directory: ${{env.working-directory}}
+#     runs-on: ubuntu-latest
+#     env: 
+#       working-directory: ./test
+ 
+#     steps:
+#     - name: armadillo
+#       run: sudo apt-get update && sudo apt-get install -yq liblapack-dev libblas-dev libboost-dev
+#     - name: curl
+#       run: sudo apt install -yq libcurl-dev
+    
+#     - uses: actions/checkout@v2
+#     - name: Configure CMake
+#       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+    
+#     - name: dir check
+#       run: ls -lrt
+#       working-directory: ${{env.working-directory}}
+#     - name: make
+#       run: make
+#       working-directory: ${{env.working-directory}}
