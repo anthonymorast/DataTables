@@ -57,6 +57,6 @@ install(FILES ${CMAKE_BINARY_DIR}/datatable.pc
 install(DIRECTORY "include/DataTable/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/DataTable)
 
 ## need to find a better way
-enable_testing()
-add_test(DataSelectionTest "${PROJECT_SOURCE_DIR}/test/DataSelectionTest")
-add_test(FileReadTest "${PROJECT_SOURCE_DIR}/test/FileReadTest")
+# enable_testing()
+# add_test(DataSelectionTest "${PROJECT_SOURCE_DIR}/test/DataSelectionTest")
+# add_test(FileReadTest "${PROJECT_SOURCE_DIR}/test/FileReadTest")
