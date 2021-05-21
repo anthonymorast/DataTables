@@ -3,17 +3,18 @@ name: Unit Tests
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    env: 
+      working-directory: ./test
+      
     steps:
     - uses: actions/checkout@v2
-    - name: cd
-      run: cd test
+    - name: dir check
+      run: ls -lrt
     - name: make
       run: make
+      working-directory: ${{env.working-directory}}
