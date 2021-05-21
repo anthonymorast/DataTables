@@ -1,9 +1,8 @@
 CFLAGS=--std=c++11 -Wno-psabi -lDataTable -larmadillo -lcurl 
 
 Test: all 
-    # build here and run via cmake 
-	# ./FileReadTest
-	# ./DataSelectionTest
+	./FileReadTest
+	./DataSelectionTest
 
 
 all: FileReadTest DataSelectionTest

@@ -6,7 +6,7 @@
 
 TEST_CASE ("x_to_x_squared", "[fileread]")
 {
-    datatable::DataTable<float> dt("../test/x_to_x_squared.csv", "x2", true);
+    datatable::DataTable<float> dt("x_to_x_squared.csv", "x2", true);
     SECTION("shape", "[fileread]")
     {
         int* shape = dt.shape();
