@@ -2,28 +2,37 @@
 
 namespace datatable
 {
-    std::string StringUtils::trim(std::string str)
+    void StringUtils::ltrim(string& str)
     {
-        auto start = str.begin();
-        while(start != str.end() && std::isspace(*start)) 
-        {
-            start++;
-        }
-
-        auto end = str.end();
-        do 
-        {
-            end--;
-        } while(std::distance(start, end) > 0 && std::isspace(*end));
-
-        return std::string(start, end+1);
+        str.erase(str.begin(), std::find_if(str.begin(), str.end(), 
+            [](unsigned char character) 
+            {
+                return !std::isspace(character);
+            }
+        ));
     }
 
-    void StringUtils::trim_all(std::string* strs, int n)
+    void StringUtils::rtrim(string& str)
+    {
+        str.erase(std::find_if(str.rbegin(), str.rend(), 
+            [](unsigned char character)
+            {   
+                return !std::isspace(character);
+            }
+        ).base(), str.end());
+    }
+
+    void StringUtils::trim(string& str)
+    {
+        ltrim(str);
+        rtrim(str);
+    }
+
+    void StringUtils::trim_all(string* strs, int n)
     {
         for(int i = 0; i < n; i++)
         {
-            strs[i] = trim(strs[i]);
+            trim(strs[i]);
         }
     }
 }

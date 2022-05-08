@@ -9,8 +9,6 @@
 
 #include "interval.hpp"
 
-
-
 namespace yfapi
 {
     template <typename T>
@@ -124,20 +122,18 @@ namespace yfapi
      * Returns a DataTable containing data downloaded from YahooFinance.
      * By default this method will delete the tmp file created by the
      * download.
-     */
-        
+     */  
     template <typename T>
     datatable::DataTable<T> YahooFinanceAPI<T>::get_ticker_data(std::string ticker, std::string start, std::string end, bool keep_file)
     {
         std::string url = build_url(ticker, start, end);
-        datatable::DataTable<T> dt;
         std::time_t now = std::time(0); // now
         std::string output_file_name = ticker + "_" + std::to_string(now) + ".csv";
         if(!keep_file)
             output_file_name = "tmp_" + output_file_name;
 
         download_file(url, output_file_name);
-        dt = datatable::DataTable<T>(output_file_name, this->_col_name, true);
+        datatable::DataTable<T> dt(output_file_name, this->_col_name, true);
 
         if(!keep_file)
             std::remove(output_file_name.c_str());

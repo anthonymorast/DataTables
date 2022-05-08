@@ -6,14 +6,15 @@
 
 namespace datatable
 {
-    
+    using string = std::string;
     class StringUtils
     {
         public:
-            std::string trim(std::string str);
-            void trim_all(std::string* strings, int count);
+            void ltrim(string& str);
+            void rtrim(string& str);
+            void trim(string& str);
+            void trim_all(string* strings, int count);
     };
-
 }
 
 #endif
