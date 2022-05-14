@@ -24,6 +24,7 @@ set(PHEADERS
 	"include/DataTable/DateUtils.hpp"
 	"include/DataTable/DataTableException.hpp"
 	"include/DataTable/ShapeType.hpp"
+	"include/DataTable/ColumnNames.hpp"
 )
 
 # some CMAKE config

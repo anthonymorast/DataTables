@@ -15,6 +15,10 @@ int main()
 	datatable::DataTable<double> x2dt("x_to_x_squared.csv", "x2", true);
 	auto start = chrono::steady_clock::now();
 	x2dt.to_csv("x_to_x_squared.copy.csv");
+	cout << x2dt.shape() << endl;
+	cout << x2dt.get_column_names() << endl;
+	cout << x2dt["x2"].shape() << endl;
+	cout << x2dt["x2"].get_column_names() << endl;
 	auto end = chrono::steady_clock::now();
 	cout << "x_to_x write time (ms): " << chrono::duration_cast<chrono::milliseconds>(end - start).count()
 		 << " ms" << endl;

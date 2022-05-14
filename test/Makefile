@@ -3,11 +3,15 @@ CFLAGS=--std=c++11 -Wno-psabi -lDataTable -larmadillo -lcurl
 Test: all 
 	./StringUtilTest
 	./ShapeTypeTest
+	./DataTableHeadersTest
 #	./FileReadTest
 	./DataSelectionTest
 
 
-all: StringUtilTest ShapeTypeTest DataSelectionTest #FileReadTest DataSelectionTest
+all: StringUtilTest ShapeTypeTest DataSelectionTest DataTableHeadersTest #FileReadTest DataSelectionTest
+
+DataTableHeadersTest: DataTableHeadersTest.o
+	g++ $(CFLAGS) -o DataTableHeadersTest $<
 
 StringUtilTest: StringUtilTest.o
 	g++ $(CFLAGS) -o StringUtilTest $<

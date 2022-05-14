@@ -5,6 +5,7 @@
 #include <DataTable/DateUtils.hpp>
 #include <DataTable/DataTableException.hpp>
 #include <DataTable/ShapeType.hpp>
+#include <DataTable/ColumnNames.hpp>
 
 #include <string>
 #include <fstream>
@@ -16,6 +17,7 @@
 #include <vector>
 #include <iterator>
 #include <map>
+#include <functional>
 
 namespace datatable
 {
@@ -30,21 +32,22 @@ namespace datatable
                 std::string response_column="", 
                 bool has_headers=true);
             DataTable(
-                const std::string* headers, 
-                const std::string& response_name, 
-                const T** data, 
+                std::vector<std::string> headers, 
+                std::string response_name, 
+                T** data, 
                 int nrows, 
                 int ncols, 
                 bool has_headers=true);
             DataTable(
-                const std::string* headers, 
+                const std::vector<std::string>& headers, 
                 int response_column, 
-                const T** data, 
+                T** data, 
                 int nrows, 
                 int ncols, 
                 bool has_headers=true);
             DataTable(const DataTable<T>&); // copy constructor
             ~DataTable();
+            void free();
 
             // file manip
             void from_csv(
@@ -69,8 +72,13 @@ namespace datatable
             // DataTable<TType> bottom_n_rows(int n);
             // DataTable<TType> select_row_range(int start, int end);
             // std::string get_header_at(int col);
-            // std::string* get_headers();
-            // std::string* get_explanatory_headers();
+            const std::vector<std::string>& get_headers() const { return _headers; };
+            const std::vector<std::string>& get_explanatory_headers() const;
+            ColumnNames get_column_names() const 
+            { 
+                ColumnNames names(_headers);
+                return names;
+            };
             // std::string get_response_column_name();
 
             // // visualization
@@ -81,10 +89,10 @@ namespace datatable
             // void print_headers(std::ostream& stream);
 
             // // table operations
-            // void drop_columns(int* columns, int count);
-            // void drop_columns(std::string* column_names, int count);
-            // void drop_column(int column);
-            // void drop_column(std::string column);
+            void drop_columns(std::vector<int>& columns);
+            void drop_columns(std::vector<std::string>& column_names);
+            void drop_column(int column);
+            void drop_column(const std::string& column);
             // void drop_rows(int* rows, int count);
             // void shuffle_rows(int passes=100);
 
@@ -107,7 +115,7 @@ namespace datatable
             // friend std::ostream& operator<<(std::ostream& os, const DataTable<U> &table);
 
             // // for other classes
-            bool has_response() { return std::strcmp(_response.c_str(), ""); }
+            bool has_response() { return _response != ""; }
             int nrows() { return _datatable_shape[0]; }
             int ncols() { return _datatable_shape[1]; }
             DT_SHAPE_TYPE shape() { return _datatable_shape; }
@@ -128,8 +136,7 @@ namespace datatable
 
             // date formats for the datetime columns
             std::map<int, std::string> _date_columns_to_formats;
-            int _get_column_from_header(std::string header);
-            T* _process_row(std::string row);
+            int _get_column_from_header(std::string header, bool shoud_error = true) const;
     };
 }
 

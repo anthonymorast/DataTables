@@ -13,21 +13,33 @@ namespace datatable
 
     template <typename T>
     DataTable<T>::DataTable(
-        const std::string* headers, 
-        const std::string& response_name, 
-        const T** data, 
+        std::vector<std::string> headers, 
+        std::string response_name, 
+        T** data, 
         int nrows, 
         int ncols, 
         bool has_headers)
     {
-
+        _headers = headers;
+        _response = response_name;
+        _datatable_shape.update(nrows, ncols);
+        _has_headers = has_headers;
+        /* seg faults with heap corruption when deep-copying more than once
+        _data = new T*[nrows];
+        for(size_t i = 0; i < nrows; i++)
+            _data[i] = new T[ncols];
+        std::copy(&data[0][0], &data[0][0] + (nrows*ncols), &_data[0][0]);*/
+        _data = data;
+        if(has_response())
+            _response_column = _get_column_from_header(_response);
+        _data_loaded = true;
     }
 
     template <typename T>
     DataTable<T>::DataTable(
-        const std::string* headers, 
+        const std::vector<std::string>& headers, 
         int response_column, 
-        const T** data, 
+        T** data, 
         int nrows, 
         int ncols, 
         bool has_headers)
@@ -44,8 +56,20 @@ namespace datatable
     template <typename T>
     DataTable<T>::~DataTable()
     {
+        // copy/double free problems -- does this need to be done before the program exits?
+        // maybe provide a clear() or free() method to do this and clear other objects
+        // if(_allocated_data)
+        //     delete []_data;
+    }
+
+    template <typename T>
+    void DataTable<T>::free()
+    {
         if(_allocated_data)
             delete []_data;
+        _headers.clear();
+        _datetime_columns.clear();
+        _date_columns_to_formats.clear();
     }
 
     // file manip
@@ -177,5 +201,126 @@ namespace datatable
         }
         out << write_stream.rdbuf();
         out.close();
+    }
+
+    template <typename T>
+    T* DataTable<T>::operator[](int index) const 
+    {  
+        // returns a row of data
+        T data[_datatable_shape[1]];    // size of columns
+        data = _data[index];
+        return data;
+    }
+
+    template <typename T>
+    DataTable<T> DataTable<T>::operator[](std::string column) const 
+    {   
+        if(std::find(_headers.begin(), _headers.end(), column) == _headers.end())    
+            throw DataTableException("Column '" + column + "' was not found in the data table.");
+
+        DataTable<T> dt(_headers, _response, _data, _datatable_shape[0], _datatable_shape[1], _has_headers);
+        // drop cols = all columns except column (so erase the column) [gauranteed to be in the vector]
+        std::vector<std::string> drop_cols = _headers;
+        drop_cols.erase(std::remove(drop_cols.begin(), drop_cols.end(), column), drop_cols.end());
+        dt.drop_columns(drop_cols);
+        return dt;
+    }
+
+    template <typename T>
+    int DataTable<T>::_get_column_from_header(std::string header, bool should_error) const 
+    {
+        auto header_iterator = std::find(_headers.begin(), _headers.end(), header);
+        if(should_error && header_iterator == _headers.end())
+            throw DataTableException("Column '" + header + "' is not in the data table.");
+        return header_iterator - _headers.begin();  // calculate the index
+    }
+
+    template <typename T>
+    const std::vector<std::string>& DataTable<T>::get_explanatory_headers() const
+    {
+        if(!_has_headers || !_response_column || !_data_loaded)
+            return _headers;    // should be an empty vector
+        
+        auto response_it = std::find(_headers.begin(), _headers.end(), _response);
+        std::vector<std::string> explanatory_headers = _headers;
+        explanatory_headers.erase(response_it);
+        return explanatory_headers;
+    }
+
+    template <typename T>
+    void DataTable<T>::drop_columns(std::vector<int>& columns)
+    {
+        // sorted the columns vector and remove from end to beginning
+        // this way only indexes past the current evaluation are changed
+        T** new_data = new T*[_datatable_shape[0]];
+        for(int i = 0; i < _datatable_shape[0]; i++) 
+            new_data[i] = new T[_datatable_shape[1] - columns.size()];  // smaller number of columns
+
+        std::sort(columns.begin(), columns.end(), std::greater<int>());
+        for(auto it : columns) 
+        {
+            // the vector is sorted descending order so this will failr right away
+            if(it > (_datatable_shape[1] - 1))       // column does not exist
+            {
+                throw DataTableException("Column does not exist. Number columns=" + 
+                        std::to_string(_datatable_shape[1]) + ", column to erase=" + std::to_string(it));
+            }
+            
+            if(_has_headers)
+                _headers.erase(_headers.begin() + it);
+            
+            if(_date_columns_to_formats.find(it) != _date_columns_to_formats.end())
+                _date_columns_to_formats.erase(it);
+        }
+
+        // update response column
+        // what if we drop the response? probably shouldn't error
+        if(_has_headers)
+            _response_column = _get_column_from_header(_response, false);
+
+        // copy data over to new data array 
+        std::vector<int> keep_cols(_datatable_shape[1]);
+        std::iota(keep_cols.begin(), keep_cols.end(), 0);
+        size_t new_count = 0;
+        for(auto it : keep_cols)
+        {
+            if(std::find(columns.begin(), columns.end(), it) == columns.end()) // not in drop cols, copy
+            {
+                for(int j = 0; j < _datatable_shape[0]; j++)
+                    new_data[j][new_count] = _data[j][it];
+                new_count++;  
+            }
+        }
+        
+        delete[] _data;
+        _data = new_data;
+        _datatable_shape.set_cols(_datatable_shape[1] - columns.size());
+    }
+
+    template <typename T>
+    void DataTable<T>::drop_columns(std::vector<std::string>& column_names)
+    {
+        std::vector<int> column_numbers(column_names.size());
+        size_t index = 0;
+        for(auto it : column_names)
+        {
+            column_numbers.at(index) = _get_column_from_header(it);
+            index++;
+        }
+        drop_columns(column_numbers);
+    }
+
+    template <typename T>
+    void DataTable<T>::drop_column(int column)
+    {
+        std::vector<int> columns(1, column);
+        drop_columns(columns);
+    }
+
+    template <typename T>
+    void DataTable<T>::drop_column(const std::string& column)
+    {
+        std::vector<int> columns(1, _get_column_from_header(column));
+        drop_columns(columns);
     }
 }
