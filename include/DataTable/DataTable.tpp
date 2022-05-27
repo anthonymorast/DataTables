@@ -36,21 +36,16 @@ namespace datatable
     }
 
     template <typename T>
-    DataTable<T>::DataTable(
-        const std::vector<std::string>& headers, 
-        int response_column, 
-        T** data, 
-        int nrows, 
-        int ncols, 
-        bool has_headers)
+    DataTable<T>::DataTable(const DataTable<T>& rhs_table)
     {
-        
-    }
-
-    template <typename T>
-    DataTable<T>::DataTable(const DataTable<T>&)
-    {
-        
+        _datatable_shape.update(rhs_table._datatable_shape[0], rhs_table._datatable_shape[1]);
+        _headers = rhs_table._headers;
+        _data = rhs_table._data;
+        _response = rhs_table.response;
+        _response_column = rhs_table._response_column;
+        _data_loaded = rhs_table._data_loaded;
+        _has_headers = rhs_table._has_headers;
+        _allocated_data = rhs_table._allocated_data;
     } 
 
     template <typename T>
@@ -80,11 +75,11 @@ namespace datatable
         bool has_headers)
     {
         if(_data_loaded)
-            throw DataTableException("Data has already been loaded for this table.");
+            throw DataTableException("ERROR (from_csv): Data has already been loaded for this table.");
 
         std::ifstream data_file(filename);
         if(!data_file.is_open())
-            throw DataTableException("Unable to open file '" + filename + "'.");
+            throw DataTableException("ERROR (from_csv): Unable to open file '" + filename + "'.");
 
         std::vector<std::string> lines;
         std::string line;
@@ -114,7 +109,7 @@ namespace datatable
                 count++;
             }
             if(!response_found)
-                throw DataTableException("Response variable not found.");
+                throw DataTableException("ERROR (from_csv): Response variable not found.");
             lines.erase(lines.begin());         // remove headers from further processing
         }
         else
@@ -152,7 +147,7 @@ namespace datatable
                     }
                     catch(...)
                     {
-                        throw DataTableException("Value '" + value + "' is not parsable as numeric.");
+                        throw DataTableException("ERROR (from_csv): Value '" + value + "' is not parsable as numeric.");
                     }
                 col++;
             }
@@ -172,7 +167,7 @@ namespace datatable
     {
         std::ofstream out(filename);
         if(!out.is_open()) 
-            throw DataTableException("Could not open file '" + filename + "'.");
+            throw DataTableException("ERROR (to_csv): Could not open file '" + filename + "'.");
         
         if(!_data_loaded)
         {
@@ -216,7 +211,7 @@ namespace datatable
     DataTable<T> DataTable<T>::operator[](std::string column) const 
     {   
         if(std::find(_headers.begin(), _headers.end(), column) == _headers.end())    
-            throw DataTableException("Column '" + column + "' was not found in the data table.");
+            throw DataTableException("ERROR (DataTable[]): Column '" + column + "' was not found in the data table.");
 
         DataTable<T> dt(_headers, _response, _data, _datatable_shape[0], _datatable_shape[1], _has_headers);
         // drop cols = all columns except column (so erase the column) [gauranteed to be in the vector]
@@ -231,7 +226,7 @@ namespace datatable
     {
         auto header_iterator = std::find(_headers.begin(), _headers.end(), header);
         if(should_error && header_iterator == _headers.end())
-            throw DataTableException("Column '" + header + "' is not in the data table.");
+            throw DataTableException("ERROR (_get_column_from_header): Column '" + header + "' is not in the data table.");
         return header_iterator - _headers.begin();  // calculate the index
     }
 
@@ -262,7 +257,7 @@ namespace datatable
             // the vector is sorted descending order so this will failr right away
             if(it > (_datatable_shape[1] - 1))       // column does not exist
             {
-                throw DataTableException("Column does not exist. Number columns=" + 
+                throw DataTableException("ERROR (drop_columns): Column does not exist. Number columns=" + 
                         std::to_string(_datatable_shape[1]) + ", column to erase=" + std::to_string(it));
             }
             
@@ -322,5 +317,124 @@ namespace datatable
     {
         std::vector<int> columns(1, _get_column_from_header(column));
         drop_columns(columns);
+    }
+
+    template <typename T>
+    void DataTable<T>::shuffle_rows(int passes)
+    {
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::uniform_int_distribution<int> distribution(0, _datatable_shape[0] - 1);
+
+        T *temp;
+        for(int i = 0; i < passes; i++) 
+        {
+            for(int j = 0; j < _datatable_shape[0]; j++)
+            {
+                int r1 = distribution(g);
+                int r2 = distribution(g);
+                temp = std::swap(_data[r1]);
+                _data[r1] = std::swap(_data[r2]);
+                _data[r2] = std::swap(temp);
+            }
+        }
+    }
+
+    template <typename T>
+    T* DataTable<T>::get_row(int row)
+    {
+        if(row > _datatable_shape[0] || row < 0)
+            throw DataTableException("ERROR (get_row): Row index out of range; passed:" + 
+                std::to_string(row) + ", num rows: " + std::to_string(_datatable_shape[0]) + ".");
+        return _data[row];
+    }
+
+    template <typename T>
+    std::string DataTable<T>::get_header_at(int col) const
+    {
+        if(!_has_headers)
+            throw DataTableException("ERROR (get_header_at): Could not fetch header. The data table does not have headers.");
+        if(col > _datatable_shape[1] || col < 0)
+            throw DataTableException("ERROR (get_header_at): Could not fetch header. Column " + std::to_string(col) + " is out of range.");
+        
+        return _headers.at(col);
+    }
+
+    template <typename T>
+    DataTable<T> DataTable<T>::select_rows(std::vector<int> row_numbers) const
+    {
+        if(row_numbers.size() > _datatable_shape[0])
+            throw DataTableException("ERROR (select_rows): number of select rows is greater than the number of 
+                rows in the data table.");
+
+        T** data = new T*[row_numbers.size()];
+        for(int i = 0; i < row_numbers.size(); i++)
+            data[i] = new T[_datatable_shape[1]];
+        
+        int count = 0 ;
+        for(int row : row_numbers)
+            memcpy(data[count++], _data[row], _datatable_shape[1] * sizeof(T));
+        
+        DataTable<T> new_dt(_headers, _response, data, row_numbers.size(), _datatable_shape[1]);
+        return new_dt;
+    }
+
+    template <typename T>
+    DataTable<T> DataTable<T>::select_row_range(int start, int end) const
+    {
+        if(end < start)
+            throw DataTableException("ERROR (select_row_range): row range end is before row range start.")
+        
+        size_t size = end - start;
+        std::vector<int> row_numbers(size);
+        for(int i = 0; i < size; i++)
+            rows.at(i) = start + i;
+        DataTable<T> new_dt = select_rows(row_numbers, size);
+        delete[] rows;
+        return new_dt;
+    }
+
+    template <typename T> 
+    std::ostream& operator<<(std::ostream& os, const DataTable<T>& table)
+    {
+        if(!table._data_loaded || (_datatable_shape[1] == 0))
+            return os;
+
+        std::string row_buffer;
+        if(table._has_headers)
+        {
+            for(int i = 0; i < table._cols; i++)
+                row_buffer += table._headers[i] + ",";
+            row_buffer.pop_back();
+            os << row_buffer << "\n";
+        }
+
+        for(int i = 0; i < table._rows; i++)
+        {
+            row_buffer = "";
+            for(int j = 0; j < table._cols; j++)
+            {
+                if(table._date_columns_to_formats.find(j) != table._date_columns_to_formats.end())
+                    row_buffer += table._date_utils.getStringFromTime((time_t)table._data[i][j], table._date_columns_to_formats.at(j));
+                else 
+                    row_buffer += std::to_string(table._data[i][j]);
+                row_buffer += ",";
+            }
+            os << row_buffer << "\n";
+        }
+
+        return os;
+    }
+
+    template <typename T> 
+    DataTable<T> DataTable<T>::select_columns(std::vector<int> column_numbers) const
+    {
+
+    }
+
+    template <typename T>
+    DataTable<T> DataTable<T>::select_columns(std::vector<std::string> column_names) const
+    {
+        
     }
 }

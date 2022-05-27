@@ -38,13 +38,6 @@ namespace datatable
                 int nrows, 
                 int ncols, 
                 bool has_headers=true);
-            DataTable(
-                const std::vector<std::string>& headers, 
-                int response_column, 
-                T** data, 
-                int nrows, 
-                int ncols, 
-                bool has_headers=true);
             DataTable(const DataTable<T>&); // copy constructor
             ~DataTable();
             void free();
@@ -58,20 +51,22 @@ namespace datatable
 
             // // get data
             T** get_data() const { return _data; }
-            // TType* get_row(int row);
+            T* get_row(int row) const;
             // TType* get_column(int column);
             // TType* get_column(std::string column_name);
             // TType* get_response();
             // size_t* get_int_response();
             // TType** get_all_explanatory();
             // TType* get_flat_explanatory();
-            // DataTable<TType> select_columns(int* column_numbers, int number_columns);
-            // DataTable<TType> select_columns(std::string* variables, int number_cols);
-            // DataTable<TType> select_rows(int* row_numbers, int number_rows);
-            // DataTable<TType> top_n_rows(int n);
-            // DataTable<TType> bottom_n_rows(int n);
-            // DataTable<TType> select_row_range(int start, int end);
-            // std::string get_header_at(int col);
+            DataTable<TType> select_columns(std::vector<int> column_numbers) const;
+            DataTable<T> select_columns(std::vector<std::string> column_names) const;
+            DataTable<T> select_rows(std::vector<int> row_numbers) const;
+            DataTable<T> select_row_range(int start, int end) const;
+            DataTable<T> top_n_rows(int n) const { return select_row_range(0, n); }
+            DataTable<T> bottom_n_rows(int n) const { return select_row_range(_datatable_shape[0] - n, _datatable_shape[0]); }
+            DataTable<T> head() const { return top_n_rows(10); }  
+            DataTable<T> tail() const { return bottom_n_rows(10); } 
+            std::string get_header_at(int col) const;
             const std::vector<std::string>& get_headers() const { return _headers; };
             const std::vector<std::string>& get_explanatory_headers() const;
             ColumnNames get_column_names() const 
@@ -79,22 +74,14 @@ namespace datatable
                 ColumnNames names(_headers);
                 return names;
             };
-            // std::string get_response_column_name();
-
-            // // visualization
-            // void print(std::ostream& stream);
-            // void print_column(std::ostream& stream, int column);
-            // void print_column(std::ostream& stream, std::string column_name);
-            // void print_row(std::ostream& stream, int row);
-            // void print_headers(std::ostream& stream);
+            std::string get_response_column_name() const { return _response; };
 
             // // table operations
             void drop_columns(std::vector<int>& columns);
             void drop_columns(std::vector<std::string>& column_names);
             void drop_column(int column);
             void drop_column(const std::string& column);
-            // void drop_rows(int* rows, int count);
-            // void shuffle_rows(int passes=100);
+            void shuffle_rows(int passes=100);
 
             // // data alteration 
             // TType* pct_change(std::string column);
@@ -111,8 +98,8 @@ namespace datatable
             // // overridden operators
             T* operator[](int index) const;     // select row
             DataTable<T> operator[](std::string column) const;  // select column into DT
-            // template <typename U>
-            // friend std::ostream& operator<<(std::ostream& os, const DataTable<U> &table);
+            template <typename U>
+            friend std::ostream& operator<<(std::ostream& os, const DataTable<U> &table);
 
             // // for other classes
             bool has_response() { return _response != ""; }
