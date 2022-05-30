@@ -38,3 +38,4 @@
 + added optimization flag to CMakeLists
 + tried to adhere to const correctness rules
 + passed values by const/reference where applicable to avoid copies
++ began added unit tests 
