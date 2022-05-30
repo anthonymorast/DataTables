@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.9)
 #  Without C++11, compile error
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_FLAGS  "-O2")
 
 # cmake config
 project(DataTable VERSION 1.0.0 DESCRIPTION "Data Tables for C++")
@@ -21,6 +22,9 @@ set(PHEADERS
 	"include/DataTable/DataTable.hpp"
 	"include/DataTable/StringUtils.hpp"
 	"include/DataTable/DateUtils.hpp"
+	"include/DataTable/DataTableException.hpp"
+	"include/DataTable/ShapeType.hpp"
+	"include/DataTable/ColumnNames.hpp"
 )
 
 # some CMAKE config
