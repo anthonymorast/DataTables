@@ -11,10 +11,15 @@ using namespace datatable;
 TEST_CASE ("headers", "header select")
 {
     vector<string> headers {"col1", "col2", "col3", "col4", "response"};
-    SECTION("rtrim", "rtrim right spaces")
+    SECTION("col select", "select columns")
     {
-        DataTable<float> dt(headers, "response", nullptr, 0, 0);
-        dt["col1"];
-        dt["test"];
+        DataTable<float> dt(headers, "response", nullptr, 0, headers.size());
+
+        // select column that doesn't exists
+        REQUIRE_THROWS_WITH(dt["test"], Catch::Contains("Column 'test' was not found in the data table."));
+
+        auto new_dt = dt["col1"];
+        REQUIRE(new_dt.ncols() == 1);
+        REQUIRE(new_dt.nrows() == 0);
     }
 }
