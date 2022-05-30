@@ -93,6 +93,9 @@ auto shape = dt.shape();
 std::cout << shape[0] << ", " << shape[1] << std::endl; // outputs # rows and # cols
 ```
 
+## Available Methods
+
+Below are the public methods available in DataTables (better documentation coming soon).
 
 ```c++
 DataTable() {}
