@@ -360,9 +360,9 @@ namespace datatable
             {
                 int r1 = distribution(g);
                 int r2 = distribution(g);
-                temp = std::swap(_data[r1]);
-                _data[r1] = std::swap(_data[r2]);
-                _data[r2] = std::swap(temp);
+                temp = _data[r1];
+                _data[r1] = _data[r2];
+                _data[r2] = temp;
             }
         }
     }
@@ -415,7 +415,7 @@ namespace datatable
         std::vector<int> row_numbers(size);
         for(int i = 0; i < size; i++)
             row_numbers.at(i) = start + i;
-        DataTable<T> new_dt = select_rows(row_numbers, size);
+        DataTable<T> new_dt = select_rows(row_numbers);
         return new_dt;
     }
 
@@ -466,10 +466,10 @@ namespace datatable
 		{
 			if(col == _response_column)
 				keep_response = true;
-			headers.at(idx) = _headers[col];
+
 			for(int i = 0; i < _datatable_shape[0]; i++)
 				new_data[i][idx] = _data[i][col];
-			idx++;
+			headers.at(idx++) = _headers[col];
 		}
 		DataTable<T> new_dt(headers, (keep_response ? _response : ""), new_data, _datatable_shape[0], column_numbers.size());
 		return new_dt;

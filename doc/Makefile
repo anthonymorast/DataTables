@@ -1,5 +1,5 @@
 CFLAGS=-lDataTable -O2 --std=c++17
-EXES=LoadingData WritingData ViewingData
+EXES=LoadingData WritingData ViewingData ModifyingData TrainTestSplit
 
 all: $(EXES)
 

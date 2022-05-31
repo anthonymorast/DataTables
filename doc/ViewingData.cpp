@@ -24,6 +24,8 @@ int main()
     std::cout << dry_bean.shape() << std::endl;         // print shape of the data set
     // print shape of the dataset in another way
     std::cout << "ROWS: " << dry_bean.shape()[0] << "\tCOLS: " << dry_bean.shape()[1] << std::endl;
+    // print shape of the dataset in another way
+    std::cout << "ROWS: " << dry_bean.nrows() << "\tCOLS: " << dry_bean.ncols() << std::endl;
     std::cout << dry_bean.max(0) << std::endl;          // print max value of "Area" column
     std::cout << dry_bean["Area"].max() << std::endl;   // print max value of "Area" column
     std::cout << dry_bean["Area"].min() << std::endl;   // print min value of "Area" column
