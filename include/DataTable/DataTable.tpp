@@ -185,13 +185,15 @@ namespace datatable
         if(!out.is_open())
             throw DataTableException("ERROR (to_csv): Could not open file '" + filename + "'.");
 
+        std::cout << "above " << _data_loaded << std::endl;
         if(!_data_loaded)
         {
             out.close();    // clean up and do nothing
             return;
         }
+        std::cout << "below" << std::endl;
 
-        std::stringstream write_stream("", std::ios_base::app | std::ios_base::out);
+        std::stringstream write_stream("", std::ios_base::ate | std::ios_base::in | std::ios_base::out);
         if(_has_headers)
         {
             std::string headers {""};
