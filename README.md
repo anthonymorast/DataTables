@@ -24,7 +24,7 @@ make && sudo make install
 CMAKE should create a Visual Studio project file to use the project in VS. This project was only tested in a Linux environment and I have little to no experience using CMake in Windows.
 
 # Usage
-After installation the DataTable structure can be imported into other C++ projects. The project must be linked in *g++* via the *-l* flag, i.e. *g++ <project_file>.cc -lDataTable*. Some times there will be errors when linking projects installed via CMake. A quick Google search reveals this is caused by ldconfig not being run after installation, running the command *ldconfig* in the Linux terminal should fix the issue assuming the project was installed correctly.
+After installation the DataTable structure can be imported into other C++ projects. The project must be linked in *g++* via the *-l* flag, i.e. *g++ <project_file>.cc -lDataTable*. Some times there will be errors when linking projects installed via CMake. A quick Google search reveals this is caused by ldconfig not being run after installation, running the command *ldconfig* in the Linux terminal should fix the issue assuming the project was installed correctly. Here's a helpful stack overflow: https://stackoverflow.com/questions/480764/linux-error-while-loading-shared-libraries-cannot-open-shared-object-file-no-s. This seems to vary on different Linux systems. For example, my /usr/local/lib directory was not being checked for shared objects on a new Arch distribution.
 
 Once installed, the DataTable stucture can be imported via
 
