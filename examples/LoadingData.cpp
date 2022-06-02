@@ -17,7 +17,7 @@ int main()
     /*
         Alternatively, the code below will load the same Iris dataset.
     */
-    datatable::DataTable<double> dt2("./data/iris.data", "class");
+    datatable::DataTable<double> dt2("./data/iris.data", "");
     datatable::DataTable<float> dt3(
         dt.get_headers(), dt.get_response_column_name(), dt.get_data(),
         dt.shape()[0], dt.shape()[1]

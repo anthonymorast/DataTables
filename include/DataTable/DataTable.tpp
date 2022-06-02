@@ -118,7 +118,7 @@ namespace datatable
                 _headers.at(count) = value;
                 count++;
             }
-            if(!response_found)
+            if(!response_found && !response.empty())
                 throw DataTableException("ERROR (from_csv): Response variable not found.");
             lines.erase(lines.begin());         // remove headers from further processing
         }
