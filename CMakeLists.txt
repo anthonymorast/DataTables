@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 
 #  Without C++11, compile error
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_CXX_FLAGS  "-O2")
 
@@ -18,7 +18,7 @@ add_library(DataTable SHARED
 
 ## create list of includes (public headers)
 ## THese will be included in the programs using our program
-set(PHEADERS 
+set(PHEADERS
 	"include/DataTable/DataTable.hpp"
 	"include/DataTable/StringUtils.hpp"
 	"include/DataTable/DateUtils.hpp"
@@ -28,9 +28,9 @@ set(PHEADERS
 )
 
 # some CMAKE config
-# PHEADERS and PUBLIC_HEADER allow us to include the headers in our project, 
+# PHEADERS and PUBLIC_HEADER allow us to include the headers in our project,
 # i.e. they create the /usr/local/YALL/*.hpp files
-set_target_properties(DataTable PROPERTIES 
+set_target_properties(DataTable PROPERTIES
 	VERSION ${PROJECT_VERSION}
 	SOVERSION 1
 	PUBLIC_HEADER "${PHEADERS}")
@@ -48,7 +48,7 @@ target_include_directories(DataTable PRIVATE src)
 target_compile_options(DataTable PRIVATE -Wno-psabi)
 
 ## Install the project shared library files and the PUBLIC HEADERS (files to be used by apps:).
-install(TARGETS DataTable 
+install(TARGETS DataTable
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/DataTable
 )

@@ -19,6 +19,7 @@
 #include <map>
 #include <functional>
 #include <limits>
+#include <type_traits>
 
 namespace datatable
 {

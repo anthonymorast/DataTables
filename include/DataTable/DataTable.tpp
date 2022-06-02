@@ -148,17 +148,22 @@ namespace datatable
             while(std::getline(ss, value, delimiter))
             {
                 auto date_map_it = _date_columns_to_formats.find(col);
-                if(date_map_it != _date_columns_to_formats.end())
-                    _data[row][col] = (T)_date_utils.getTimeFromString(value, date_map_it->second);
+                if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) // constexpr only necessary on first statement
+                {
+                    if(date_map_it != _date_columns_to_formats.end())
+                        _data[row][col] = (T)_date_utils.getTimeFromString(value, date_map_it->second);
+                    else
+                        try
+                        {
+                            _data[row][col] = std::stod(value);
+                        }
+                        catch(...)
+                        {
+                            throw DataTableException("ERROR (from_csv): Value '" + value + "' is not parsable as numeric.");
+                        }
+                }
                 else
-                    try
-                    {
-                        _data[row][col] = std::stod(value);
-                    }
-                    catch(...)
-                    {
-                        throw DataTableException("ERROR (from_csv): Value '" + value + "' is not parsable as numeric.");
-                    }
+                    _data[row][col] = value;
                 col++;
             }
             row++;
@@ -185,13 +190,11 @@ namespace datatable
         if(!out.is_open())
             throw DataTableException("ERROR (to_csv): Could not open file '" + filename + "'.");
 
-        std::cout << "above " << _data_loaded << std::endl;
         if(!_data_loaded)
         {
             out.close();    // clean up and do nothing
             return;
         }
-        std::cout << "below" << std::endl;
 
         std::stringstream write_stream("", std::ios_base::ate | std::ios_base::in | std::ios_base::out);
         if(_has_headers)
@@ -209,10 +212,15 @@ namespace datatable
             std::string output_string {""};
             for(int j = 0; j < _datatable_shape[1]; j++)
 			{
-                if(_date_columns_to_formats.find(j) != _date_columns_to_formats.end())
-                    output_string += _date_utils.getStringFromTime((time_t)_data[i][j], _date_columns_to_formats.at(j));
+                if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
+                {
+                    if(_date_columns_to_formats.find(j) != _date_columns_to_formats.end())
+                        output_string += _date_utils.getStringFromTime((time_t)_data[i][j], _date_columns_to_formats.at(j));
+                    else
+                        output_string += std::to_string(_data[i][j]);
+                }
                 else
-                    output_string += std::to_string(_data[i][j]);
+                    output_string += _data[i][j];
                 output_string += delimiter;
 			}
             output_string.pop_back();
@@ -441,10 +449,15 @@ namespace datatable
             row_buffer = "";
             for(int j = 0; j < table._datatable_shape[1]; j++)
             {
-                if(table._date_columns_to_formats.find(j) != table._date_columns_to_formats.end())
-                    row_buffer += table._date_utils.getStringFromTime((time_t)table._data[i][j], table._date_columns_to_formats.at(j));
+                if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>)
+                {
+                    if(table._date_columns_to_formats.find(j) != table._date_columns_to_formats.end())
+                        row_buffer += table._date_utils.getStringFromTime((time_t)table._data[i][j], table._date_columns_to_formats.at(j));
+                    else
+                        row_buffer += std::to_string(table._data[i][j]);
+                }
                 else
-                    row_buffer += std::to_string(table._data[i][j]);
+                    row_buffer += table._data[i][j];
                 row_buffer += ",";
             }
             row_buffer.pop_back();

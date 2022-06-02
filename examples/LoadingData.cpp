@@ -33,8 +33,17 @@ int main()
 
     /*
         Loading a data set without headers from a CSV file.
+        The dataset was too large for git w/o LFS.
     */
-    datatable::DataTable<double> mnist("./data/mnist_train.csv", "", false);
+    // datatable::DataTable<double> mnist("./data/mnist_train.csv", "", false);
+
+    /*
+        Load data with non-integral types
+    */
+    datatable::DataTable<std::string> mpt("./data/mpt_data_tickers.csv", "", false);
+
+    std::cout << mpt << std::endl;
+    std::cout << mpt.shape() << std::endl;
 
     return 0;
 }
