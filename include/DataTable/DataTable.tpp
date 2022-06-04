@@ -234,8 +234,11 @@ namespace datatable
     T* DataTable<T>::operator[](int index) const
     {
         // returns a row of data
-        T data[_datatable_shape[1]];    // size of columns
-        data = _data[index];
+        T* data = new T[_datatable_shape[1]];    // size of columns
+        std::cout << _datatable_shape << std::endl;
+        std::cout << _data[index] << std::endl;
+        std::copy(_data[index], _data[index] + _datatable_shape[1], data);
+        // data = _data[index];    //copy?
         return data;
     }
 
@@ -243,7 +246,7 @@ namespace datatable
     DataTable<T> DataTable<T>::operator[](std::string column) const
     {
         if(std::find(_headers.begin(), _headers.end(), column) == _headers.end())
-            throw DataTableException("ERROR (DataTable[]): Column '" + column + "' was not found in the data table.");
+            throw DataTableException("ERROR (DataTable[string]): Column '" + column + "' was not found in the data table.");
 
         DataTable<T> dt(_headers, _response, _data, _datatable_shape[0], _datatable_shape[1], _has_headers);
         // drop cols = all columns except column (so erase the column) [gauranteed to be in the vector]

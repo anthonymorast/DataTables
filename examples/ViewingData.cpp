@@ -35,6 +35,10 @@ int main()
               << std::endl;                                  // print max of first 10 "MajorAxisLength" rows.
     std::cout << dry_bean.head()["ShapeFactor1"].sum()
               << std::endl;                                  // print sum of first 10 "ShapeFactor1" rows.
+    double* data = dry_bean[1];
+    for(int i = 0; i < dry_bean.shape()[1]; i++)
+        std::cout << data[i] << ", ";
+    std::cout << std::endl;
 
     /*
         As previously mentioned, the methods above almost all return data table objects.
