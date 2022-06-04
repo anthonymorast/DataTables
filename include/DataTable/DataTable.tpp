@@ -234,12 +234,7 @@ namespace datatable
     T* DataTable<T>::operator[](int index) const
     {
         // returns a row of data
-        T* data = new T[_datatable_shape[1]];    // size of columns
-        std::cout << _datatable_shape << std::endl;
-        std::cout << _data[index] << std::endl;
-        std::copy(_data[index], _data[index] + _datatable_shape[1], data);
-        // data = _data[index];    //copy?
-        return data;
+        return get_row(index);
     }
 
     template <typename T>
